@@ -1,3 +1,6 @@
+/*
+Copyright © 2022 xiandan HERE xiandan-erizo@outlook.com
+*/
 package cmd
 
 // NewBaseCommand cmd struct

@@ -1,4 +1,6 @@
-// CheckAndTransformFilePath return converted path
+/*
+Copyright © 2022 xiandan HERE xiandan-erizo@outlook.com
+*/
 package cmd
 
 import (
