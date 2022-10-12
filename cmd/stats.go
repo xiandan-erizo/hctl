@@ -120,7 +120,7 @@ func sendMessage() {
 	c := resty.New()
 	result := &ResMsg{}
 	_, _ = c.R().SetResult(result).SetBody(bytes.NewBuffer([]byte(bytesData))).
-		SetHeader("Accept", "application/json").Get("https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5")
+		SetHeader("Accept", "application/json").Get(bot)
 
 	if result.StatusCode != 0 {
 		fmt.Printf("发送失败: %+v", result)
