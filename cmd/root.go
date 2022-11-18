@@ -19,6 +19,8 @@ import (
 
 var (
 	cfgFile string
+	msg     string
+	bot     string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -92,6 +94,8 @@ func (cli *Cli) setFlags() {
 	kubeconfig := flag.String("kubeconfig", filepath.Join(homeDir(), ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	flags := cli.rootCmd.PersistentFlags()
 	flags.StringVar(&cfgFile, "config", *kubeconfig, "path of kubeconfig")
+	flags.StringVarP(&bot, "bot", "b", "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5", "飞书机器人地址")
+	flags.StringVarP(&msg, "msg", "m", "服务重启完成", "需要发送的消息")
 }
 
 // Cli cmd struct
