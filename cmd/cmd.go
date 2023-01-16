@@ -11,6 +11,8 @@ func NewBaseCommand() *BaseCommand {
 	}
 	baseCmd.AddCommands(
 		&StatsComand{}, // version command
+		&DumpCommand{},
+		&TopComand{},
 	)
 
 	return baseCmd

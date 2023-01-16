@@ -18,8 +18,6 @@ import (
 )
 
 var (
-	msg string
-	bot string
 	dep string
 )
 
@@ -40,8 +38,6 @@ func (sc *StatsComand) Init() {
 		},
 	}
 
-	sc.command.Flags().StringVarP(&bot, "bot", "b", "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5", "飞书机器人地址")
-	sc.command.Flags().StringVarP(&msg, "msg", "m", "服务重启完成", "需要发送的消息")
 	sc.command.Flags().StringVarP(&dep, "deployment", "d", "", "需要检测的deployment")
 }
 
@@ -120,7 +116,7 @@ func sendMessage() {
 	c := resty.New()
 	result := &ResMsg{}
 	_, _ = c.R().SetResult(result).SetBody(bytes.NewBuffer([]byte(bytesData))).
-		SetHeader("Accept", "application/json").Get("https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5")
+		SetHeader("Accept", "application/json").Get(bot)
 
 	if result.StatusCode != 0 {
 		fmt.Printf("发送失败: %+v", result)

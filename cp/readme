@@ -1,0 +1,4 @@
+/*
+https://www.51cto.com/article/644345.html
+总结: 1.不带缓冲的通道需要先读后写 2.websocket ReadMessage方法是阻塞读取的, 如果要中断读取, 关闭连接, 捕获错误即可
+*/
