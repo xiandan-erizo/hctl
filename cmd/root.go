@@ -102,7 +102,7 @@ func (cli *Cli) setFlags() {
 	kubeconfig := flag.String("kubeconfig", filepath.Join(homeDir(), ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	flags := cli.rootCmd.PersistentFlags()
 	flags.StringVar(&cfgFile, "config", *kubeconfig, "path of kubeconfig")
-	flags.StringVarP(&bot, "bot", "b", "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5", "飞书机器人地址")
+	flags.StringVarP(&bot, "bot", "b", "", "飞书机器人地址")
 	flags.StringVarP(&msg, "msg", "m", "服务重启完成", "需要发送的消息")
 }
 
@@ -127,7 +127,6 @@ func NewCli() *Cli {
 }
 func InitConfig() {
 	yamlFile, err := ioutil.ReadFile(filepath.Join(homeDir(), ".htl", "config.yaml"))
-	fmt.Println("初始化配置文件")
 	if err != nil {
 		htlconfig.Feishu.Url = "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5"
 		htlconfig.Feishu.Msg = "服务重启完成"
@@ -138,8 +137,6 @@ func InitConfig() {
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		fmt.Printf("config.app: %#v\n", htlconfig.Feishu)
-		fmt.Printf("config.log: %#v\n", htlconfig.Dump)
 	}
 }
 

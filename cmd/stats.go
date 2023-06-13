@@ -143,10 +143,11 @@ func sendMessage() {
 
 	if msg == "" {
 		data["content"] = map[string]string{"text": htlconfig.Feishu.Msg}
+	} else {
+		data["content"] = map[string]string{"text": msg}
 	}
 
 	bytesData, _ := json.Marshal(data)
-	data["content"] = map[string]string{"text": msg}
 
 	if bot == "" {
 		bot = htlconfig.Feishu.Url
