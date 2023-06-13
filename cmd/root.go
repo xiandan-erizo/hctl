@@ -7,6 +7,13 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	kruiseclientset "github.com/openkruise/kruise-api/client/clientset/versioned"
+	"gopkg.in/yaml.v2"
+	hconfig "htl/config"
+	"io/ioutil"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/exec"
 	"os/user"
@@ -18,9 +25,10 @@ import (
 )
 
 var (
-	cfgFile string
-	msg     string
-	bot     string
+	cfgFile   string
+	msg       string
+	bot       string
+	htlconfig hconfig.HConfig
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -114,5 +122,50 @@ func NewCli() *Cli {
 	cli.rootCmd.SetErr(os.Stderr)
 	cli.setFlags()
 	cli.rootCmd.DisableAutoGenTag = true
+	InitConfig()
 	return cli
+}
+func InitConfig() {
+	yamlFile, err := ioutil.ReadFile(filepath.Join(homeDir(), ".htl", "config.yaml"))
+	fmt.Println("初始化配置文件")
+	if err != nil {
+		htlconfig.Feishu.Url = "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5"
+		htlconfig.Feishu.Msg = "服务重启完成"
+		htlconfig.Dump.OssPath = "/javadump/"
+		htlconfig.Dump.OssRs = "centos"
+	} else {
+		err = yaml.Unmarshal(yamlFile, &htlconfig)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		fmt.Printf("config.app: %#v\n", htlconfig.Feishu)
+		fmt.Printf("config.log: %#v\n", htlconfig.Dump)
+	}
+}
+
+func getClient(cfgFile string, restype string) (string, discovery.DiscoveryInterface) {
+	config, _ := clientcmd.LoadFromFile(cfgFile)
+	if client != nil {
+		return contNs, client
+	}
+	currentContext := config.CurrentContext
+	contNs := config.Contexts[currentContext].Namespace
+
+	configN, err := clientcmd.BuildConfigFromFlags("", cfgFile)
+	if err != nil {
+		panic(err)
+	}
+
+	if restype == "deployment" {
+		client, _ := kubernetes.NewForConfig(configN)
+		return contNs, client
+	}
+
+	kruiseConfig, err := clientcmd.BuildConfigFromFlags("", cfgFile)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	client = kruiseclientset.NewForConfigOrDie(kruiseConfig)
+	return contNs, client
 }

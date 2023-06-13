@@ -30,18 +30,13 @@ func CheckAndTransformFilePath(path string) (string, error) {
 func ExecCommandPod(podName string, cmdList []string) (string, string, error) {
 	cmdExec := []string{"/bin/sh", "-c"}
 	cmdExec = append(cmdExec, cmdList...)
-	config, _ := clientcmd.LoadFromFile(cfgFile)
-	currentContext := config.CurrentContext
-	contNs := config.Contexts[currentContext].Namespace
-	configN, err := clientcmd.BuildConfigFromFlags("", cfgFile)
-	if err != nil {
-		return "", "", err
-	}
-	clientSet, err := kubernetes.NewForConfig(configN)
+
+	_, clientSet := getClient(cfgFile, "deployment")
+	k8sClientSet, _ := clientSet.(*kubernetes.Clientset)
 
 	buf := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
-	request := clientSet.CoreV1().RESTClient().
+	request := k8sClientSet.CoreV1().RESTClient().
 		Post().
 		Namespace(contNs).
 		Resource("pods").
@@ -54,6 +49,7 @@ func ExecCommandPod(podName string, cmdList []string) (string, string, error) {
 			Stderr:  true,
 			TTY:     true,
 		}, scheme.ParameterCodec)
+	configN, err := clientcmd.BuildConfigFromFlags("", cfgFile)
 	exec, err := remotecommand.NewSPDYExecutor(configN, "POST", request.URL())
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdout: buf,

@@ -15,8 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 	"strings"
 	"time"
 )
@@ -52,7 +50,7 @@ func (sc *StatsComand) Init() {
 		},
 	}
 
-	sc.command.Flags().StringVarP(&rstype, "rstype", "t", "", "控制器类型")
+	sc.command.Flags().StringVarP(&rstype, "rstype", "t", "deployment", "控制器类型")
 	sc.command.Flags().StringVarP(&rslist, "rslist", "l", "", "具体名称列表,空格分割")
 }
 
@@ -62,8 +60,6 @@ func (sc *StatsComand) runStats(cmd *cobra.Command, args []string) error {
 	rstype, _ = sc.command.Flags().GetString("rstype")
 	rslist, _ = sc.command.Flags().GetString("rslist")
 	// 获取当前ns
-	config, _ := clientcmd.LoadFromFile(cfgFile)
-
 	// TODO 输入deployment进行检测
 	rstypeResult, ok := rstypeMap[rstype]
 	if !ok {
@@ -80,12 +76,12 @@ func (sc *StatsComand) runStats(cmd *cobra.Command, args []string) error {
 	count := 0
 	writer := uilive.New()
 	writer.Start()
-	check(config, count, rstypeResult, writer)
+	check(cfgFile, count, rstypeResult, writer)
 	sendMessage()
 	return nil
 }
 
-func check(config *api.Config, count int, rstypeResult string, writer *uilive.Writer) {
+func check(config string, count int, rstypeResult string, writer *uilive.Writer) {
 	needSend := true
 	var serviceList []string
 	if rstypeResult == "deployment" {
@@ -136,33 +132,6 @@ func check(config *api.Config, count int, rstypeResult string, writer *uilive.Wr
 	check(config, count, rstypeResult, writer)
 }
 
-func getClient(config *api.Config, restype string) (string, discovery.DiscoveryInterface) {
-	if client != nil {
-		return contNs, client
-	}
-	currentContext := config.CurrentContext
-	contNs := config.Contexts[currentContext].Namespace
-
-	configN, err := clientcmd.BuildConfigFromFlags("", cfgFile)
-	if err != nil {
-		// Handle error
-		panic(err)
-	}
-
-	if restype == "deployment" {
-		client, _ := kubernetes.NewForConfig(configN)
-		return contNs, client
-	}
-
-	kruiseConfig, err := clientcmd.BuildConfigFromFlags("", cfgFile)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	client = kruiseclientset.NewForConfigOrDie(kruiseConfig)
-	return contNs, client
-}
-
 type ResMsg struct {
 	StatusMessage string
 	StatusCode    int
@@ -171,8 +140,17 @@ type ResMsg struct {
 func sendMessage() {
 	data := make(map[string]interface{})
 	data["msg_type"] = "text"
-	data["content"] = map[string]string{"text": msg}
+
+	if msg == "" {
+		data["content"] = map[string]string{"text": htlconfig.Feishu.Msg}
+	}
+
 	bytesData, _ := json.Marshal(data)
+	data["content"] = map[string]string{"text": msg}
+
+	if bot == "" {
+		bot = htlconfig.Feishu.Url
+	}
 
 	c := resty.New()
 	result := &ResMsg{}
