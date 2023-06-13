@@ -12,7 +12,7 @@ func NewBaseCommand() *BaseCommand {
 	baseCmd.AddCommands(
 		&StatsComand{}, // version command
 		&DumpCommand{},
-		&TopComand{},
+		// &TopComand{},
 	)
 
 	return baseCmd
