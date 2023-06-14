@@ -18,15 +18,12 @@ htl status -t clo
 ## 自定义config
 配置目录 ~/.htl/config.yaml
 ```yaml
-feishubot:
-  # 默认的飞书机器人地址
-  add: ''
-  # 发送的信息文本
+feishu:
+  url: ''
   msg: "服务重启完成"
 dump:
-  # 存储javadump的deployment名称
   ossRs: centos
-  # javadump的存放路径
+  ossPod: "/javatmp/"
   ossPath: "/javatmp/"
 ```
 ## Feature
