@@ -5,7 +5,7 @@ package main
 
 import (
 	"fmt"
-	"htl/cmd"
+	"hctl/cmd"
 	"os"
 )
 

@@ -1,4 +1,4 @@
-htl 自用工具
+hctl 自用工具
 
 ## 功能
 检查deployment和cloneset的启动情况,启动完成就发送飞书通知
@@ -8,9 +8,9 @@ htl 自用工具
 ### 示例
 ```shell
 # 检查deployment
-htl status
+hctl status
 # 检查cloneset
-htl status -t clo
+hctl status -t clo
 ```
 ### 效果如下
 
@@ -18,7 +18,7 @@ htl status -t clo
 
 ![img_1.png](image/message.png)
 ## 自定义config
-配置目录 ~/.htl/config.yaml
+配置目录 ~/.hctl/config.yaml
 ```yaml
 feishu:
   url: ''

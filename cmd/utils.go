@@ -31,7 +31,7 @@ func ExecCommandPod(podName string, cmdList []string) (string, string, error) {
 	cmdExec := []string{"/bin/sh", "-c"}
 	cmdExec = append(cmdExec, cmdList...)
 
-	_, clientSet := getClient(cfgFile, "deployment")
+	_, clientSet, _, _ := getClient(cfgFile, "deployment", "")
 	k8sClientSet, _ := clientSet.(*kubernetes.Clientset)
 
 	buf := &bytes.Buffer{}

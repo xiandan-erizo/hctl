@@ -39,7 +39,7 @@ func (dc *DumpCommand) runDump(cmd *cobra.Command, args []string) error {
 	podName, _ = dc.command.Flags().GetString("pod")
 	podPath, _ := dc.command.Flags().GetString("pd")
 	if podPath == "" {
-		podPath = htlconfig.Dump.OssPod
+		podPath = hctlconfig.Dump.OssPod
 	}
 
 	// 进入目标pod 打dump

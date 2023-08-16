@@ -7,11 +7,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	kruiseclientset "github.com/openkruise/kruise-api/client/clientset/versioned"
 	"gopkg.in/yaml.v2"
-	hconfig "htl/config"
+	hconfig "hctl/config"
 	"io/ioutil"
+	crdClientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
@@ -25,15 +26,16 @@ import (
 )
 
 var (
-	cfgFile   string
-	msg       string
-	bot       string
-	htlconfig hconfig.HConfig
+	cfgFile    string
+	msg        string
+	bot        string
+	namespace  string
+	hctlconfig hconfig.HConfig
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "htl",
+	Use:   "hctl",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -104,6 +106,7 @@ func (cli *Cli) setFlags() {
 	flags.StringVar(&cfgFile, "config", *kubeconfig, "path of kubeconfig")
 	flags.StringVarP(&bot, "bot", "b", "", "飞书机器人地址")
 	flags.StringVarP(&msg, "msg", "m", "服务重启完成", "需要发送的消息")
+	flags.StringVarP(&namespace, "namespace", "n", "", "命名空间")
 }
 
 // Cli cmd struct
@@ -115,7 +118,7 @@ type Cli struct {
 func NewCli() *Cli {
 	cli := &Cli{
 		rootCmd: &cobra.Command{
-			Use: "htl",
+			Use: "hctl",
 		},
 	}
 	cli.rootCmd.SetOut(os.Stdout)
@@ -126,27 +129,31 @@ func NewCli() *Cli {
 	return cli
 }
 func InitConfig() {
-	yamlFile, err := ioutil.ReadFile(filepath.Join(homeDir(), ".htl", "config.yaml"))
+	yamlFile, err := ioutil.ReadFile(filepath.Join(homeDir(), ".hctl", "config.yaml"))
 	if err != nil {
-		htlconfig.Feishu.Url = "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5"
-		htlconfig.Feishu.Msg = "服务重启完成"
-		htlconfig.Dump.OssPath = "/javadump/"
-		htlconfig.Dump.OssRs = "centos"
+		hctlconfig.Feishu.Url = "https://open.feishu.cn/open-apis/bot/v2/hook/daa4ff06-226a-4fdc-8c26-2e049e618ad5"
+		hctlconfig.Feishu.Msg = "服务重启完成"
+		hctlconfig.Dump.OssPath = "/javadump/"
+		hctlconfig.Dump.OssRs = "centos"
 	} else {
-		err = yaml.Unmarshal(yamlFile, &htlconfig)
+		err = yaml.Unmarshal(yamlFile, &hctlconfig)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 	}
 }
 
-func getClient(cfgFile string, restype string) (string, discovery.DiscoveryInterface) {
+func getClient(cfgFile string, restype string, namespace string) (string, discovery.DiscoveryInterface, *crdClientset.Clientset, *dynamic.DynamicClient) {
 	config, _ := clientcmd.LoadFromFile(cfgFile)
 	if client != nil {
-		return contNs, client
+		return contNs, client, nil, nil
 	}
 	currentContext := config.CurrentContext
-	contNs := config.Contexts[currentContext].Namespace
+	if namespace != "" {
+		contNs = namespace
+	} else {
+		contNs = config.Contexts[currentContext].Namespace
+	}
 
 	configN, err := clientcmd.BuildConfigFromFlags("", cfgFile)
 	if err != nil {
@@ -154,15 +161,23 @@ func getClient(cfgFile string, restype string) (string, discovery.DiscoveryInter
 	}
 
 	if restype == "deployment" {
-		client, _ := kubernetes.NewForConfig(configN)
-		return contNs, client
+		client, _ = kubernetes.NewForConfig(configN)
+		return contNs, client, nil, nil
+	} else
+	//} else if restype == "cloneset" {
+	//	kruiseConfig, err := clientcmd.BuildConfigFromFlags("", cfgFile)
+	//	if err != nil {
+	//		panic(err.Error())
+	//	}
+	//
+	//	client = kruiseclientset.NewForConfigOrDie(kruiseConfig)
+	//	return contNs, client, nil
+	//}
+	{
+		// 创建dynamic
+		crdClient := crdClientset.NewForConfigOrDie(configN)
+		client := dynamic.NewForConfigOrDie(configN)
+		return contNs, nil, crdClient, client
 	}
 
-	kruiseConfig, err := clientcmd.BuildConfigFromFlags("", cfgFile)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	client = kruiseclientset.NewForConfigOrDie(kruiseConfig)
-	return contNs, client
 }
